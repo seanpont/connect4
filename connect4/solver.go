@@ -1,98 +1,62 @@
 package connect4
 
 import (
-	// "fmt"
-	// "github.com/seanpont/connect4/minimax"
+	_"fmt"
+	"github.com/seanpont/connect4/minimax"
 )
 
-// func (g *Connect4Game) LegalMoves() []Move {
+func Solve(game *Game, depth int, verbose ...bool) int {
+	isVerbose := verbose != nil && len(verbose) == 1 && verbose[0]
+	solver := &minimax.Solver{ HasWon, depth, isVerbose }
+	move, _ := solver.Solve( GameWrapper{game} )
+	return move.(int)
+}
 
-// }
+func SolveVerbose(game *Game, depth int) int {
+	return Solve(game, depth, true)
+}
 
-// func (g *Connect4Game) Play(m Move) (Game, bool) {
-// 	board1 := *g.board
-// 	var move int = m.(int)
-// 	board1.Play(moveInt)
-// 	return 
-// }
+// Wrapper around connect4 game to make it match minimax.Game interface
+type GameWrapper struct {
+	*Game
+}
 
-// type ObjectiveFunction func(*Board) (int, int)
+func (g GameWrapper) Copy() minimax.Game {
+	return GameWrapper{g.Game.Copy()}
+}
 
-// func HasWonObjFunc(b *Board) (int, int) {
-// 	return hasWon(b, p1), hasWon(b, p2)
-// }
+func (g GameWrapper) LegalMoves() []minimax.Move {
+	moves := g.Game.LegalMoves()
+	moves2 := make([]minimax.Move, 0, len(moves))
+	for _, move := range moves {
+		moves2 = append(moves2, minimax.Move(move))
+	}
+	return moves2
+}
 
-// func hasWon(b *Board, p byte) int {
-// 	for row:=0; row<ROWS; row++ {
-// 		if maxConsecutiveInARow(b, row, p) == CONNECT {
-// 			return 1
-// 		}
-// 	}
-// 	for column:=0; column<COLUMNS; column++ {
-// 		if maxConsecutiveInAColumn(b, column, p) == CONNECT {
-// 			return 1
-// 		}
-// 	}
-// 	return 0
-// }
+func (g GameWrapper) Play(move minimax.Move) (bool, error) {
+	return g.Game.Play(move.(int))
+}
 
-// type Solver interface {
-// 	Solve(Board) int
-// }
+// UTILITY FUNCTION ==========================================================
 
-// type Minimax struct {
-// 	f ObjectiveFunction
-// }
-
-// func (s *Minimax) Solve(b Board) int {
-// 	max := b.Turn()
-// 	min := p1
-// 	if (max == min) { min = p2 }
-
-// 	// for col := 1; col <= COLUMNS; col++ {
-
-
-// 	return 1
-// }
-
-// // HELPER METHODS ============================================================
-
-// func maxConsecutiveInARow(b *Board, row int, p byte) int {
-// 	m := 0
-// 	consecutive := 0
-// 	for column:=0; column<COLUMNS; column++ {
-// 		if p == b.board[row][column] {
-// 			consecutive++
-// 		} else {
-// 			m = max(m, consecutive)
-// 			consecutive = 0
-// 		}
-// 	}
-// 	return m
-// }
-
-// func maxConsecutiveInAColumn(b *Board, column int, p byte) int {
-// 	m := 0
-// 	consecutive := 0
-// 	for row:=0; row<ROWS; row++ {
-// 		if p == b.board[row][column] {
-// 			consecutive++
-// 		} else {
-// 			m = max(m, consecutive)
-// 			consecutive = 0
-// 		}
-// 	}
-// 	return m
-// }
-
-// func max(a, b int) int {
-// 	if a > b { return a }
-// 	return b
-// }
-
-
-
-
+func HasWon(g minimax.Game) int {
+	game := g.(GameWrapper).Game
+	player := game.turn % 2 + 1 // get other player
+	for i:=0; i<ROWS; i++ {
+		if game.testRow(player, i) { return 1 }
+	}
+	for i:=0; i<COLUMNS; i++ {
+		if game.testColumn(player, i) { return 1 }
+	}
+	for i:=0; i<COLUMNS-3; i++ {
+		if game.testLeftDiagonal(player, 2, i) { return 1 }
+	}
+	for i:=3; i>COLUMNS; i++ {
+		if game.testRightDiagonal(player, 0, i) { return 1 }
+	}
+	return 0
+}
 
 
 

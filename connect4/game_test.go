@@ -6,17 +6,29 @@ import (
 	_"fmt"
 )
 
+func Test_Copy(t *testing.T) {
+	assert := assert.Assert(t)
+	g := NewGame()
+	g.SetRows("1212000")
+	g1 := g.Copy()
+	g1.Play(5)
+	assert.Equal(g.turn, p1)
+	assert.Equal(g1.turn, p2)
+	assert.Equal(g.board[0], []byte{1,2,1,2,0,0,0})
+	assert.Equal(g1.board[0], []byte{1,2,1,2,1,0,0})
+}
+
 func Test_LegalMoves(t *testing.T) {
 	assert := assert.Assert(t)
 	g := NewGame()
 	assert.Equal(g.LegalMoves(),
-		[]byte{1,2,3,4,5,6,7})
+		[]int{1,2,3,4,5,6,7})
 
 	for row:=0; row<ROWS/2; row++ {
 		g.Play(1); g.Play(1); g.Play(4); g.Play(4)
 	}
 	assert.Equal(g.LegalMoves(),
-		[]byte{2,3,5,6,7})
+		[]int{2,3,5,6,7})
 }
 
 func Test_ConnectCounter(t *testing.T) {

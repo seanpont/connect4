@@ -21,8 +21,7 @@ type GameState struct {
 }
 
 func (gs GameState) String() string {
-	return fmt.Sprintf("{Game: %v, Move: %v, Utility: %v}", 
-		gs.Game, gs.Move, gs.Utility)
+	return fmt.Sprintf("{Move: %v, Utility: %v}", gs.Move, gs.Utility)
 }
 
 type ByUtility []GameState
@@ -47,46 +46,74 @@ func (a ByUtility) Min() GameState {
 // then it should return -1
 type UtilityFunction func(Game) int
 
-type MinimaxSolver struct {
+type Solver struct {
 	UtilityFunction
-	depth int
+	Depth int
+	Verbose bool
 }
 
-func (s *MinimaxSolver) Solve(game Game) (move Move, utility int) {
+func (s *Solver) Solve(game Game) (move Move, utility int) {
 	gameState := s.explore(game, 0)
 	return gameState.Move, gameState.Utility
 }
 
-func (s *MinimaxSolver) explore(game Game, depth int) GameState {
+func (s *Solver) explore(game Game, depth int) GameState {
 	spaces := strings.Repeat(" ", depth * 4)
-	fmt.Println(spaces + "Exploring game:", game)
-	fmt.Println(spaces + "Depth:", depth)
-	gameStates := make([]GameState, 0)
-
-	for move := range game.LegalMoves() {
+	if (s.Verbose) {
+		gameStr := spaces+strings.Replace(fmt.Sprint(game), "\n", "\n"+spaces, -1)
+		fmt.Println(spaces + "Exploring game:\n", gameStr)
+		fmt.Println(spaces + "Depth:", depth)
+	}
+	legalMoves := game.LegalMoves()
+	gameStates := make([]GameState, 0, len(legalMoves))
+	if (s.Verbose) {
+		fmt.Println(spaces + "Legal moves:", legalMoves)
+	}
+	for _, move := range legalMoves {
+		if (s.Verbose) {
+			fmt.Println(spaces + "Exploring move:", move)
+		}
 		game1 := game.Copy()
 		over, err := game1.Play(move)
 		if (err != nil) { panic(err) }
 		gameState := GameState{ game1, move, s.UtilityFunction(game1) }
 		if over {
-			fmt.Println(spaces + "Terminal game state found:", gameState)
+			if (s.Verbose) {
+				fmt.Println(spaces + "Terminal game state found:", gameState)
+			}
 			return gameState
 		} 
 		gameStates = append(gameStates, gameState)			
 	}
 	sort.Sort(sort.Reverse(ByUtility(gameStates)))
-	fmt.Println(spaces + "Game states:")
-	for _, gameState := range gameStates { fmt.Println( spaces, gameState) }
-	if depth < s.depth {
-		for _, gameState := range gameStates {
-			gameState.Utility = -1 * s.explore(gameState.Game, depth+1).Utility
-			fmt.Println(spaces + "Utility after search:", gameState.Utility)
+	if s.Verbose {
+		fmt.Println(spaces + "Game states:")
+		for _, gameState := range gameStates { 
+			fmt.Println( spaces, gameState) 
 		}
-		fmt.Println(spaces + "Game states after exploration:")
-		for _, gameState := range gameStates { fmt.Println( spaces, gameState) }
 	}
-	fmt.Println(spaces + "Best move:", ByUtility(gameStates).Max().Move)
-	return ByUtility(gameStates).Max()
+	if depth < s.Depth {
+		for i := range gameStates {
+			gameStates[i].Utility = 
+				-1 * s.explore(gameStates[i].Game, depth+1).Utility
+			if (s.Verbose) {
+				gameState := gameStates[i]
+				fmt.Printf(spaces + "Utility of move %v after search: %v\n", 
+					gameState.Move, gameState.Utility)
+			}
+		}
+		if (s.Verbose) {
+			fmt.Println(spaces + "Game states after exploration:")
+			for _, gameState := range gameStates { 
+				fmt.Println( spaces, gameState) 
+			}
+		}
+	}
+	best := ByUtility(gameStates).Max()
+	if (s.Verbose) {
+		fmt.Printf(spaces + "Best move: %v, Utility: %v\n", best.Move, best.Utility)
+	}
+	return best
 }
 
 

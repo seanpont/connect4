@@ -1,51 +1,75 @@
 package connect4
 
 import (
-	// "testing"
-	// "github.com/seanpont/assert"
+	"testing"
+	// "fmt"
+	"github.com/seanpont/assert"
+	"github.com/seanpont/connect4/minimax"
 )
 
-// func _Test_solve_explores_states(t *testing.T) {
-// 	assert := assert.Assert(t)
+// SOLVER ====================================================================
 
-// 	b := NewBoard()
-// 	b.SetRows("1110000")
+func Test_Solve_aver_vertical_disaster(t *testing.T) {
+	assert := assert.Assert(t)
+	game := NewGame()
+	game.SetRows(
+		"1000000",
+		"2010000",
+		"2211000",
+		"2211120")
 
-// 	m := Minimax{ HasWonObjFunc }
-// 	move := m.Solve(*b)
+	over, _ := game.Play(2)
+	assert.False(over, "wtf")
 
-// 	assert.Equal(move, 4)
+	// game.turn = p2
+	// move := SolveVerbose(game, 2)
+	// assert.Equal(move, 3)
 
-// }
+}
 
-// // Objective Functions =======================================================
+func Test_Solve_avert_disaster(t *testing.T) {
+	assert := assert.Assert(t)
+	game := NewGame()
+	game.SetRows(
+		"2000000",
+		"2000000",
+		"1110000")
+	game.turn = p2
+	move := Solve(game, 2)
+	assert.Equal(move, 4)
+}
 
-// func Test_HasWonObjFunc(t *testing.T) {
-// 	assert := assert.Assert(t)
-// 	board := NewBoard()
-// 	board.SetRows("1111000")
-// 	a, b := HasWonObjFunc(board)
-// 	assert.Equal(a, 1)
-// 	assert.Equal(b, 0)
+// Utility Functions =========================================================
 
-// 	board.SetRows("1222211")
-// 	a, b = HasWonObjFunc(board)
-// 	assert.Equal(a, 0)
-// 	assert.Equal(b, 1)
+func Test_HasWonUtilityFunction_returns_1_when_won(t *testing.T) {
+	assert := assert.Assert(t)
+	game := NewGame()
+	wrapper := GameWrapper{ game }
+	game.SetRows("1110000")
+	assert.Equal(HasWon(wrapper), 0)
+	hasWon, _ := game.Play(4) // now it's player 2's turn, but 1 won
+	assert.True(hasWon, "should have won")
+	assert.Equal(HasWon(wrapper), 1)
+}
 
-// 	board.SetRows(
-// 		"0000010",
-// 		"0000120",
-// 		"0001220",
-// 		"0012210",
-// 		)
-// 	a, b = HasWonObjFunc(board)
-// 	assert.Equal(a, 1)
-// 	assert.Equal(b, 0)
+func Test_HasWonUtilityFuncion_implements_correct_inverface(t *testing.T) {
+	assert := assert.Assert(t)
+	solver := minimax.Solver { HasWon, 4, false }
+	assert.NotNil(solver, "solver not nil")
+}
 
-	
+// C4Game Wrapper ============================================================
 
-// }
+func Test_C4Game(t *testing.T) {
+	assert := assert.Assert(t)
+	game := GameWrapper{NewGame()}
+	g := minimax.Game(game)
+	assert.NotNil(g, "not nil")
+
+	game1 := game.Copy()
+	game1.Play(1)
+	assert.NotEqual(game, game1)
+}
 
 
 

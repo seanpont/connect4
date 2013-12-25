@@ -56,7 +56,7 @@ func TestMinimax(t *testing.T) {
 	game := NewHeapGame(0, 0,1, 0,1,-1,0, 0,1,-1,0,1,2,0,1 )
 	fmt.Println(game.utility)
 	// best move: 1
-	solver := &MinimaxSolver{ HeapUtilityFunction, 2 }
+	solver := &Solver{ HeapUtilityFunction, 2 }
 	move, utility := solver.Solve(game)
 	moveInt := move.(int)
 	assert.Equal(moveInt, 1)
